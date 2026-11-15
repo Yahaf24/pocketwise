@@ -1,0 +1,113 @@
+{
+  "_about": "Shared test cases for the PocketWise calculation engine. Amounts are shekel strings (converted to agorot by the test runner). Used by tests/test_engine.py; the future JS engine must pass the same file.",
+  "profiles": {
+    "dana": {
+      "income": "4000",
+      "expenses": [
+        {"name": "Rent & Dorm Utilities", "amount": "1800", "kind": "essential"},
+        {"name": "Groceries & Food", "amount": "800", "kind": "essential"},
+        {"name": "Public Transit", "amount": "250", "kind": "essential"},
+        {"name": "Campus Coffee & Dining", "amount": "250", "kind": "flexible"},
+        {"name": "Streaming & Subscriptions", "amount": "100", "kind": "flexible"}
+      ]
+    },
+    "overspent": {
+      "income": "3000",
+      "expenses": [
+        {"name": "Rent", "amount": "2850", "kind": "essential"},
+        {"name": "Dining", "amount": "350", "kind": "flexible"}
+      ]
+    },
+    "nothing": {"income": "0", "expenses": []},
+    "no_expenses": {"income": "2000", "expenses": []},
+    "tight": {
+      "income": "333.33",
+      "expenses": []
+    },
+    "tight_ok": {
+      "income": "333.34",
+      "expenses": []
+    }
+  },
+  "cases": [
+    {
+      "id": "T01_T02_infeasible",
+      "profile": "dana", "today": "2026-11-08",
+      "goal": {"name": "Laptop", "target": "6000", "saved": "0", "deadline": "2027-05-08"},
+      "expect": {
+        "balance": "800", "essential": "2850", "flexible": "350", "total_expenses": "3200",
+        "remaining": "6000", "months": 6, "required_monthly": "1000", "monthly_remainder": "-200",
+        "status": "not_feasible",
+        "alt_a": {"available": true, "months": 8, "deadline": "2027-07-08", "required_monthly": "750", "monthly_remainder": "50"},
+        "alt_b": {"available": true, "target": "4800", "required_monthly": "800", "monthly_remainder": "0"},
+        "alt_c": {"available": true, "reduction_needed": "200", "flexible_total": "350", "monthly_remainder": "0"}
+      }
+    },
+    {
+      "id": "T03_extended_deadline",
+      "profile": "dana", "today": "2026-11-08",
+      "goal": {"name": "Laptop", "target": "6000", "saved": "0", "deadline": "2027-07-08"},
+      "expect": {"months": 8, "required_monthly": "750", "monthly_remainder": "50", "status": "feasible"}
+    },
+    {
+      "id": "partial_month_not_counted",
+      "profile": "dana", "today": "2026-11-08",
+      "goal": {"name": "Laptop", "target": "6000", "saved": "0", "deadline": "2027-05-20"},
+      "expect": {"months": 6, "required_monthly": "1000", "status": "not_feasible"}
+    },
+    {
+      "id": "already_achieved",
+      "profile": "dana", "today": "2026-11-08",
+      "goal": {"name": "Laptop", "target": "6000", "saved": "7000", "deadline": "2027-05-08"},
+      "expect": {"remaining": "0", "required_monthly": "0", "status": "already_achieved"}
+    },
+    {
+      "id": "deadline_under_one_month",
+      "profile": "dana", "today": "2026-11-08",
+      "goal": {"name": "Laptop", "target": "6000", "saved": "0", "deadline": "2026-12-01"},
+      "expect": {"months": 0, "status": "needs_updated_info"}
+    },
+    {
+      "id": "expenses_exceed_income",
+      "profile": "overspent", "today": "2026-11-08",
+      "goal": {"name": "Trip", "target": "6000", "saved": "0", "deadline": "2027-05-08"},
+      "expect": {
+        "balance": "-200", "required_monthly": "1000", "monthly_remainder": "-1200", "status": "not_feasible",
+        "alt_a": {"available": false}, "alt_b": {"available": false},
+        "alt_c": {"available": false, "reduction_needed": "1200", "flexible_total": "350"}
+      }
+    },
+    {
+      "id": "zero_income_zero_expenses",
+      "profile": "nothing", "today": "2026-11-08",
+      "goal": {"name": "Trip", "target": "500", "saved": "0", "deadline": "2027-05-08"},
+      "expect": {"balance": "0", "status": "not_feasible",
+                 "alt_a": {"available": false}, "alt_b": {"available": false}, "alt_c": {"available": false}}
+    },
+    {
+      "id": "zero_expenses",
+      "profile": "no_expenses", "today": "2026-11-08",
+      "goal": {"name": "Trip", "target": "6000", "saved": "0", "deadline": "2027-05-08"},
+      "expect": {"balance": "2000", "required_monthly": "1000", "monthly_remainder": "1000", "status": "feasible"}
+    },
+    {
+      "id": "uneven_division_short_by_agora",
+      "profile": "tight", "today": "2026-11-08",
+      "goal": {"name": "Books", "target": "1000", "saved": "0", "deadline": "2027-02-08"},
+      "expect": {"months": 3, "required_monthly": "333.34", "monthly_remainder": "-0.01", "status": "not_feasible",
+                 "alt_a": {"available": true, "months": 4}}
+    },
+    {
+      "id": "uneven_division_ok",
+      "profile": "tight_ok", "today": "2026-11-08",
+      "goal": {"name": "Books", "target": "1000", "saved": "0", "deadline": "2027-02-08"},
+      "expect": {"months": 3, "required_monthly": "333.34", "monthly_remainder": "0", "status": "feasible"}
+    },
+    {
+      "id": "end_of_month_clamp",
+      "profile": "dana", "today": "2027-01-31",
+      "goal": {"name": "Laptop", "target": "500", "saved": "0", "deadline": "2027-02-28"},
+      "expect": {"months": 1, "status": "feasible"}
+    }
+  ]
+}
