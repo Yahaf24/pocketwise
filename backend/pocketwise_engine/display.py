@@ -15,11 +15,18 @@ def format_money(agorot: int, currency: str = "ILS") -> str:
 
 
 def goal_light(status: str) -> str:
-    """Goal indicator (D10): "green" once the goal is reached, otherwise "off".
+    """Goal indicator (D10), from an assess() status.
 
+    "celebrate" = goal reached (green flash, message and celebration),
+    "on_track"  = the plan reaches the goal by the deadline (steady green),
+    "off"       = anything else.
     Display only. Never red: a goal not reached yet is not a failure (CLAUDE.md rule 9).
     """
     from .engine import ALREADY_ACHIEVED, FEASIBLE, NEEDS_UPDATED_INFO, NOT_FEASIBLE
     if status not in (ALREADY_ACHIEVED, FEASIBLE, NEEDS_UPDATED_INFO, NOT_FEASIBLE):
         raise ValueError(f"Unknown status: {status!r}")
-    return "green" if status == ALREADY_ACHIEVED else "off"
+    if status == ALREADY_ACHIEVED:
+        return "celebrate"
+    if status == FEASIBLE:
+        return "on_track"
+    return "off"

@@ -71,11 +71,22 @@ The user may choose how amounts are **shown**: ₪ (ILS, default) or $ (USD). Th
 - Changing the symbol does not change the assumptions fingerprint (D5) and does not trigger reassessment (D6).
 Note: this narrows CLAUDE.md rule 8 ("currency switching" out of scope) to "currency conversion" out of scope; the spec in the claude.ai Project still needs the same update.
 
-## D10 — Green light when the goal is reached (Proposed, needs team confirmation)
-When the status is **Already Achieved** (G = 0, meaning S ≥ T), the UI shows a green light.
-- `goal_light(status)` in `display.py` returns `"green"` for Already Achieved and `"off"` for every other status. An unknown status raises `ValueError`.
-- It is display only. It reads the status from `assess()` and never changes amounts, the fingerprint (D5) or a confirmed plan (D6).
+## D10 — Green light for the goal (Proposed, needs team confirmation)
+`goal_light(status)` in `display.py` maps the `assess()` status to a light:
+
+| Status | Light | What the user sees |
+|---|---|---|
+| Feasible | `on_track` | Steady green light, "בדרך ליעד" |
+| Already Achieved (G = 0, so S ≥ T) | `celebrate` | Flashing green light, the message "הגעת ליעד! 🎉", and a short celebration with fireworks, confetti and emoji (🎉🎊) |
+| Not Feasible, Needs Updated Information | `off` | Neutral grey, "בואו נבדוק יחד את האפשרויות" |
+
+- An unknown status raises `ValueError`.
+- The light is display only. It never changes amounts, the fingerprint (D5) or a confirmed plan (D6).
 - There is no red state. A goal that hasn't been reached yet is not shown as a failure (CLAUDE.md rule 9).
+- **Frontend:** `frontend/goal-light.js` and `frontend/goal-light.css`, with a demo in `frontend/goal-light-demo.html`.
+- **Celebration length:** it plays for about 5.5 seconds and never blocks clicks.
+- **Once per goal:** when a `goalKey` is passed, the celebration plays only once for that goal, tracked in LocalStorage.
+- **Reduced motion:** with `prefers-reduced-motion`, only the message and a steady green light are shown.
 
 ## Open
 - D8 needs a team decision.

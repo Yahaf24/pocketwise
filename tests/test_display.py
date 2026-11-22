@@ -53,11 +53,15 @@ from pocketwise_engine import (
 )
 
 
-def test_goal_light_green_only_when_achieved():
-    assert goal_light(ALREADY_ACHIEVED) == "green"
+def test_goal_light_celebrates_when_achieved():
+    assert goal_light(ALREADY_ACHIEVED) == "celebrate"
 
 
-@pytest.mark.parametrize("status", [FEASIBLE, NOT_FEASIBLE, NEEDS_UPDATED_INFO])
+def test_goal_light_on_track_when_feasible():
+    assert goal_light(FEASIBLE) == "on_track"
+
+
+@pytest.mark.parametrize("status", [NOT_FEASIBLE, NEEDS_UPDATED_INFO])
 def test_goal_light_off_for_other_statuses(status):
     # Not reached yet is never shown as red: no financial shaming (CLAUDE.md rule 9).
     assert goal_light(status) == "off"
@@ -72,9 +76,13 @@ def _goal(saved):
     return Goal(name="laptop", target=600000, saved=saved, deadline=date(2027, 5, 8))
 
 
-def test_goal_light_turns_green_when_saved_reaches_target():
+def test_goal_light_follows_assessment():
+    # ₪800/month available, goal ₪6,000 by 8 May 2027 (M = 6), as in DECISIONS.md.
     expenses = [Expense(name="rent", amount=0, kind="essential")]
     today = date(2026, 11, 8)
-    assert goal_light(assess(80000, expenses, _goal(599999), today)["status"]) == "off"
-    assert goal_light(assess(80000, expenses, _goal(600000), today)["status"]) == "green"
-    assert goal_light(assess(80000, expenses, _goal(650000), today)["status"]) == "green"
+    light = lambda saved: goal_light(assess(80000, expenses, _goal(saved), today)["status"])
+    assert light(0) == "off"              # needs ₪1,000/month, has ₪800: not feasible
+    assert light(120000) == "on_track"    # ₪4,800 left over 6 months = ₪800/month: exactly enough
+    assert light(599999) == "on_track"    # one agora short of the target
+    assert light(600000) == "celebrate"   # S = T
+    assert light(650000) == "celebrate"   # S > T

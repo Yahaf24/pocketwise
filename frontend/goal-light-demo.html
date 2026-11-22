@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PocketWise – אור ירוק ליעד (דמו)</title>
+  <link rel="stylesheet" href="goal-light.css">
+  <style>
+    body { font-family: system-ui, "Segoe UI", Arial, sans-serif; margin: 0; padding: 32px 16px; background: #F4F8F6; color: #16302A; }
+    @media (prefers-color-scheme: dark) { body { background: #0B1715; color: #E2F3EA; } }
+    main { max-width: 560px; margin: 0 auto; display: grid; gap: 20px; }
+    .card { border: 1px solid #C9D8D2; border-radius: 14px; padding: 20px; display: grid; gap: 14px; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+    button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid #9AA7A5; background: transparent; color: inherit; cursor: pointer; }
+    button:focus-visible { outline: 2px solid #1E9E5E; outline-offset: 2px; }
+    p { margin: 0; }
+    .hint { font-size: 14px; opacity: .75; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>אור ירוק ליעד – דמו</h1>
+    <p class="hint">דמו בלבד. באפליקציה, הערך מגיע מ-<code>goal_light(status)</code> במנוע. הדוגמה: ₪800 פנויים בחודש, יעד ₪6,000 עד 8 במאי 2027.</p>
+    <div class="card">
+      <strong>מחשב נייד · ₪6,000</strong>
+      <div id="goal-light"></div>
+      <div class="buttons">
+        <button type="button" data-light="off">נחסכו ₪0 (לא בהישג)</button>
+        <button type="button" data-light="on_track">נחסכו ₪1,200 (בדרך ליעד)</button>
+        <button type="button" data-light="celebrate">נחסכו ₪6,000 (הגעת ליעד)</button>
+      </div>
+    </div>
+  </main>
+  <script src="goal-light.js"></script>
+  <script>
+    var el = document.getElementById("goal-light");
+    PocketWiseGoalLight.render(el, "off");
+    document.querySelectorAll("[data-light]").forEach(function (b) {
+      b.addEventListener("click", function () { PocketWiseGoalLight.render(el, b.dataset.light); });
+    });
+  </script>
+</body>
+</html>
