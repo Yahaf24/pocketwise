@@ -2,11 +2,19 @@
 
 Student budgeting and savings-goal planner — HUJI Business Data & Technology (55312). Team: Rahaf, Dania, Nahla.
 
-## Run the tests
+PocketWise answers three questions: How much do I have each month? Can I reach my savings goal by my deadline? If not, what are realistic alternatives?
+
+## Get started
 ```bash
+git clone https://github.com/Yahaf24/pocketwise.git
+cd pocketwise
 pip install -r requirements.txt
 python -m pytest -q
 ```
+
+## Branches
+- `main` — stable; tests always pass. Only merged into from `dev`.
+- `dev` — day-to-day work. Run `git pull` before you start, and make sure the tests pass before you push.
 
 ## Continue with Claude Code
 ```bash
