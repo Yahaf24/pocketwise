@@ -41,3 +41,40 @@ def test_symbol_does_not_change_amount():
     # Switching the symbol never converts: the same number is stored either way.
     assert parse_amount("$1,800", "amount") == parse_amount("₪1,800", "amount") == 180000
     assert parse_amount(" $ 50.25 ", "amount") == 5025
+
+
+# --- Green light when the goal is reached (D10) ---------------------------------
+
+from datetime import date
+
+from pocketwise_engine import (
+    ALREADY_ACHIEVED, FEASIBLE, NEEDS_UPDATED_INFO, NOT_FEASIBLE,
+    Expense, Goal, assess, goal_light,
+)
+
+
+def test_goal_light_green_only_when_achieved():
+    assert goal_light(ALREADY_ACHIEVED) == "green"
+
+
+@pytest.mark.parametrize("status", [FEASIBLE, NOT_FEASIBLE, NEEDS_UPDATED_INFO])
+def test_goal_light_off_for_other_statuses(status):
+    # Not reached yet is never shown as red: no financial shaming (CLAUDE.md rule 9).
+    assert goal_light(status) == "off"
+
+
+def test_goal_light_unknown_status_rejected():
+    with pytest.raises(ValueError):
+        goal_light("almost_there")
+
+
+def _goal(saved):
+    return Goal(name="laptop", target=600000, saved=saved, deadline=date(2027, 5, 8))
+
+
+def test_goal_light_turns_green_when_saved_reaches_target():
+    expenses = [Expense(name="rent", amount=0, kind="essential")]
+    today = date(2026, 11, 8)
+    assert goal_light(assess(80000, expenses, _goal(599999), today)["status"]) == "off"
+    assert goal_light(assess(80000, expenses, _goal(600000), today)["status"]) == "green"
+    assert goal_light(assess(80000, expenses, _goal(650000), today)["status"]) == "green"

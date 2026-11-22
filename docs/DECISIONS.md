@@ -71,7 +71,14 @@ The user may choose how amounts are **shown**: ₪ (ILS, default) or $ (USD). Th
 - Changing the symbol does not change the assumptions fingerprint (D5) and does not trigger reassessment (D6).
 Note: this narrows CLAUDE.md rule 8 ("currency switching" out of scope) to "currency conversion" out of scope; the spec in the claude.ai Project still needs the same update.
 
+## D10 — Green light when the goal is reached (Proposed, needs team confirmation)
+When the status is **Already Achieved** (G = 0, meaning S ≥ T), the UI shows a green light.
+- `goal_light(status)` in `display.py` returns `"green"` for Already Achieved and `"off"` for every other status. An unknown status raises `ValueError`.
+- It is display only. It reads the status from `assess()` and never changes amounts, the fingerprint (D5) or a confirmed plan (D6).
+- There is no red state. A goal that hasn't been reached yet is not shown as a failure (CLAUDE.md rule 9).
+
 ## Open
 - D8 needs a team decision.
 - D9 needs team confirmation.
+- D10 needs team confirmation.
 - Whether feasibility screen allows editing goal parameters inline (Stitch design does) or only via Edit Goal (spec).

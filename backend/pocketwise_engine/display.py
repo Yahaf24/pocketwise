@@ -12,3 +12,14 @@ def format_money(agorot: int, currency: str = "ILS") -> str:
     sign = "-" if agorot < 0 else ""
     whole, cents = divmod(abs(agorot), 100)
     return f"{sign}{CURRENCIES[currency]}{whole:,}.{cents:02d}"
+
+
+def goal_light(status: str) -> str:
+    """Goal indicator (D10): "green" once the goal is reached, otherwise "off".
+
+    Display only. Never red: a goal not reached yet is not a failure (CLAUDE.md rule 9).
+    """
+    from .engine import ALREADY_ACHIEVED, FEASIBLE, NEEDS_UPDATED_INFO, NOT_FEASIBLE
+    if status not in (ALREADY_ACHIEVED, FEASIBLE, NEEDS_UPDATED_INFO, NOT_FEASIBLE):
+        raise ValueError(f"Unknown status: {status!r}")
+    return "green" if status == ALREADY_ACHIEVED else "off"
