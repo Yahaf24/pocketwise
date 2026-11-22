@@ -63,6 +63,15 @@ Each contribution has a unique ID generated when the form opens. Adding the same
 The Python engine is the reference implementation. Recommendation: mirror it in a small JS module in the browser, both checked against `tests/vectors.json`, so the app still works if Flask is unavailable (T12) and Flask is needed only for optional AI explanations.
 Alternative: calculations only in Flask; the app shows a "service unavailable" message when Flask is down.
 
+## D9 — Currency symbol (Proposed, needs team confirmation)
+The user may choose how amounts are **shown**: ₪ (ILS, default) or $ (USD). This is a display label only:
+- No conversion and no exchange rates. Stored amounts, calculations and test vectors are unchanged (still integer minor units; "agorot" in the code).
+- `format_money(agorot, currency)` in `display.py` gives e.g. `₪1,234.50` / `$1,234.50`, negative as `-₪200.00`. Always 2 decimals.
+- `parse_amount` ignores a ₪ or $ typed in the input.
+- Changing the symbol does not change the assumptions fingerprint (D5) and does not trigger reassessment (D6).
+Note: this narrows CLAUDE.md rule 8 ("currency switching" out of scope) to "currency conversion" out of scope; the spec in the claude.ai Project still needs the same update.
+
 ## Open
 - D8 needs a team decision.
+- D9 needs team confirmation.
 - Whether feasibility screen allows editing goal parameters inline (Stitch design does) or only via Edit Goal (spec).

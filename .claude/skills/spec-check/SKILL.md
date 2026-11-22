@@ -8,7 +8,7 @@ description: Check a PocketWise screen, Stitch export, UI text or code change ag
 Review the given screen, file or diff against the rules below. Read `CLAUDE.md` and `docs/DECISIONS.md` first.
 
 ## Checklist
-1. **Scope** — nothing outside V1: no login/sign-up, bank links, multiple goals, cloud sync, notifications, payments, investment advice, roommate cost splitting, currency switching, profile photos or user names.
+1. **Scope** — nothing outside V1: no login/sign-up, bank links, multiple goals, cloud sync, notifications, payments, investment advice, roommate cost splitting, currency conversion or exchange rates (a ₪/$ display symbol is allowed, D9), profile photos or user names.
 2. **Numbers** — every amount shown comes from the engine and matches `docs/DECISIONS.md` for the example data (₪4,000 income, ₪3,200 expenses = ₪2,850 essential + ₪350 flexible, ₪6,000 goal, 6 months → ₪1,000 needed, ₪200 short; A = 8 months/₪750/₪50 left, B = ₪4,800, C = cut ₪200 of flexible). No fractional months ("7.5 months" is wrong). No invented numbers, percentages or "% feasible".
 3. **User control** — no alternative is applied without Select → Plan Confirmation → Confirm. Every alternative has Select This Plan, Edit Scenario, Reject Suggestion and Why This Option?. Essential expenses are never changed.
 4. **Statuses** — only Feasible, Not Feasible, Already Achieved, Needs Updated Information.

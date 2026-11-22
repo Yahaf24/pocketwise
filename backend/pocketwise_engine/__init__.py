@@ -4,5 +4,6 @@ from .engine import (
     add_contribution, apply_flexible_reductions, assess, fingerprint,
     monthly_summary, plan_needs_review, should_show_suggestion, total_contributed,
 )
+from .display import CURRENCIES, format_money
 from .months import add_months, planning_months
 from .validation import Expense, Goal, ValidationError, parse_amount, parse_date, parse_expense, parse_goal
