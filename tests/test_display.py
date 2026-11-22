@@ -7,11 +7,13 @@ from pocketwise_engine import CURRENCIES, format_money, parse_amount
 @pytest.mark.parametrize("agorot,currency,expected", [
     (123450, "ILS", "₪1,234.50"),
     (123450, "USD", "$1,234.50"),
-    (0, "ILS", "₪0.00"),
+    (0, "ILS", "₪0"),
     (5, "ILS", "₪0.05"),
-    (80000, "USD", "$800.00"),
-    (1_000_000_000, "ILS", "₪10,000,000.00"),
-    (-20000, "ILS", "-₪200.00"),
+    (50, "ILS", "₪0.50"),
+    (80000, "USD", "$800"),
+    (80001, "ILS", "₪800.01"),
+    (1_000_000_000, "ILS", "₪10,000,000"),
+    (-20000, "ILS", "-₪200"),
     (-5, "USD", "-$0.05"),
 ])
 def test_format_money(agorot, currency, expected):
@@ -19,7 +21,7 @@ def test_format_money(agorot, currency, expected):
 
 
 def test_default_currency_is_shekel():
-    assert format_money(80000) == "₪800.00"
+    assert format_money(80000) == "₪800"
 
 
 def test_supported_currencies():

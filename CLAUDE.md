@@ -7,7 +7,7 @@ The full specification lives in the claude.ai Project "data science" (project de
 Calculation rules and settled decisions: `docs/DECISIONS.md` — read it before touching anything in `backend/pocketwise_engine/`.
 
 ## Stack (V1)
-- Frontend: plain HTML + CSS + JavaScript (no framework), responsive, accessible forms. *(not built yet)*
+- Frontend: plain HTML + CSS + JavaScript (no framework), responsive, accessible forms. UI in Hebrew, RTL (D10). Calculations run in a JS mirror of the engine, checked against `tests/vectors.json` (D8). *(not built yet)*
 - Backend: Python 3.11+, Flask. *(not built yet)*
 - Calculation engine: `backend/pocketwise_engine/` — pure Python, no Flask, no I/O. **Built and tested.**
 - Storage: browser LocalStorage only (guest mode). No database, no accounts, no Supabase in V1.
@@ -57,6 +57,7 @@ claude-setup/                source copy of .claude/; `python setup_claude.py` r
 
 ## Status (updated 22 Nov 2026)
 - Phase 1 research: done. Phase 2 Stitch design: 4 of 10 screens exported, review in `design/stitch-review.md`.
-- Phase 4 engine: implemented with tests (T01–T06, T08, T09 at engine level), plus stage-2 hardening: month edge cases, status order, alternative C boundaries, validation edges, `total_contributed()` (S = initial amount + contributions). 76 tests passing.
-- Phases 3, 5–8 (frontend, Flask backend, ...): not started. D8 (where calculations run) still needs a team decision.
+- Phase 4 engine: implemented with tests (T01–T06, T08, T09 at engine level), plus stage-2 hardening: month edge cases, status order, alternative C boundaries, validation edges, `total_contributed()` (S = initial amount + contributions). Plus `format_money()` (₪/$, D9). 94 tests passing.
+- Decided 22 Nov 2026: D8 = calculations in the browser (JS mirror), D2 = hide ".00" on whole amounts, D10 = Hebrew RTL UI. D9 still needs team confirmation.
+- Next: put the spec into `docs/PRD.md`, then the JS mirror of the engine. Frontend, storage and Flask: not started.
 - 5-minute project pitch deck (English, for Ofek): https://claude.ai/artifact/HzYt1GjXKF5KT3Zq4G8JjS
