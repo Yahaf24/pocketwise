@@ -34,10 +34,10 @@ class Goal:
 
 
 def parse_amount(value, field: str, allow_negative: bool = False) -> int:
-    """Shekel amount (number or string, max 2 decimals) -> integer agorot."""
+    """Amount (number or string, max 2 decimals) -> integer agorot. A ₪ or $ symbol is ignored (D9: no conversion)."""
     if isinstance(value, bool) or not isinstance(value, (int, float, str, Decimal)):
         raise ValidationError(field, "Please enter an amount.")
-    text = str(value).strip().replace(",", "").replace("₪", "")
+    text = str(value).replace(",", "").replace("₪", "").replace("$", "").strip()
     if text == "":
         raise ValidationError(field, "Please enter an amount.")
     try:

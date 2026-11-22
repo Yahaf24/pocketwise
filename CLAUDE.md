@@ -21,7 +21,8 @@ python -m pytest -q          # run all tests (must pass before any commit)
 ## Layout
 ```
 backend/pocketwise_engine/   calculation engine: engine.py (assess, alternatives, contributions),
-                             months.py (planning_months, add_months), validation.py (parse_amount → agorot, parse_goal, ...)
+                             months.py (planning_months, add_months), validation.py (parse_amount → agorot, parse_goal, ...),
+                             display.py (format_money: ₪/$ symbol, display only)
 tests/                       pytest tests; tests/vectors.json = shared test cases (also for future JS mirror)
 docs/DECISIONS.md            calculation rules + open decisions
 design/                      Stitch export review and design notes
@@ -43,7 +44,7 @@ claude-setup/                source copy of .claude/; `python setup_claude.py` r
 5. A rejected suggestion is not shown again unless the financial assumptions change (fingerprint) or the user asks to compare again.
 6. One active savings goal only (V1).
 7. One month-counting rule everywhere: `planning_months()` in `months.py`. Never count months another way on any screen.
-8. Out of V1 scope — do not build: login/sign-up, bank integration, multiple goals, cloud sync, push/email notifications, payments, investment advice, cost splitting with roommates, currency switching.
+8. Out of V1 scope — do not build: login/sign-up, bank integration, multiple goals, cloud sync, push/email notifications, payments, investment advice, cost splitting with roommates, currency conversion / exchange rates. (Choosing the ₪ or $ display symbol is allowed — display only, see D9.)
 9. Tone in all UI text: supportive, nonjudgmental, no financial shaming.
 10. Do not invent user research, testimonials, metrics, or claim a feature works unless it is implemented and tested.
 
