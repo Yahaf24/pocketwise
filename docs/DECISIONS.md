@@ -33,7 +33,7 @@ At goal creation, a deadline that is today or in the past is rejected as invalid
 - All amounts stored as integer agorot. Inputs accept at most 2 decimal places; negative, non-numeric, NaN/∞ and amounts above ₪10,000,000 are rejected.
 - R is rounded **up** to the agora (you cannot save a fraction of an agora; rounding down would leave the goal short).
 - Feasibility is decided exactly: **feasible ⇔ B × M ≥ G** (no rounding involved). This is equivalent to B ≥ R.
-- Display formatting (₪ sign, thousands separators, whether to hide ".00") is a frontend concern and never feeds back into calculations.
+- Display formatting never feeds back into calculations. Decided 22 Nov 2026: symbol first, thousands separators, and ".00" hidden on whole amounts (`₪800`, `₪800.01`, `₪0.50`). Implemented once in `format_money()` (D9).
 
 ## D3 — Statuses (Proposed)
 Checked in this order:
@@ -59,19 +59,20 @@ When inputs change, the assessment is recalculated. A confirmed plan is **never*
 ## D7 — Contributions (Proposed)
 Each contribution has a unique ID generated when the form opens. Adding the same ID twice is a no-op (duplicate-click protection, T09). Contributions increase S, so G and R decrease.
 
-## D8 — Where calculations run (Proposed, needs team decision)
-The Python engine is the reference implementation. Recommendation: mirror it in a small JS module in the browser, both checked against `tests/vectors.json`, so the app still works if Flask is unavailable (T12) and Flask is needed only for optional AI explanations.
-Alternative: calculations only in Flask; the app shows a "service unavailable" message when Flask is down.
+## D8 — Where calculations run (Decided 22 Nov 2026)
+Calculations run **in the browser**, in a small JS module that mirrors the Python engine. The Python engine stays the reference implementation; both are checked against `tests/vectors.json`, so they can't drift apart. The app works without Flask (T12); Flask is needed only for optional AI explanations.
 
 ## D9 — Currency symbol (Proposed, needs team confirmation)
 The user may choose how amounts are **shown**: ₪ (ILS, default) or $ (USD). This is a display label only:
 - No conversion and no exchange rates. Stored amounts, calculations and test vectors are unchanged (still integer minor units; "agorot" in the code).
-- `format_money(agorot, currency)` in `display.py` gives e.g. `₪1,234.50` / `$1,234.50`, negative as `-₪200.00`. Always 2 decimals.
+- `format_money(agorot, currency)` in `display.py` gives e.g. `₪1,234.50` / `$1,234.50`, `₪800` for whole amounts (".00" hidden, see D2), negative as `-₪200`.
 - `parse_amount` ignores a ₪ or $ typed in the input.
 - Changing the symbol does not change the assumptions fingerprint (D5) and does not trigger reassessment (D6).
 Note: this narrows CLAUDE.md rule 8 ("currency switching" out of scope) to "currency conversion" out of scope; the spec in the claude.ai Project still needs the same update.
 
+## D10 — Interface language (Decided 22 Nov 2026)
+The app UI is in **Hebrew, right-to-left** (`<html lang="he" dir="rtl">`). Amounts are shown inside `dir="ltr"` so `₪1,234.50` never flips.
+
 ## Open
-- D8 needs a team decision.
 - D9 needs team confirmation.
 - Whether feasibility screen allows editing goal parameters inline (Stitch design does) or only via Edit Goal (spec).
