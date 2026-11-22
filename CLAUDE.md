@@ -20,12 +20,20 @@ python -m pytest -q          # run all tests (must pass before any commit)
 
 ## Layout
 ```
-backend/pocketwise_engine/   calculation engine (money, months, validation, engine)
+backend/pocketwise_engine/   calculation engine: engine.py (assess, alternatives, contributions),
+                             months.py (planning_months, add_months), validation.py (parse_amount → agorot, parse_goal, ...)
 tests/                       pytest tests; tests/vectors.json = shared test cases (also for future JS mirror)
 docs/DECISIONS.md            calculation rules + open decisions
 design/                      Stitch export review and design notes
 .claude/                     Claude Code agents, skills, hooks for this repo
+claude-setup/                source copy of .claude/; `python setup_claude.py` reinstalls it
 ```
+
+## Claude Code setup
+- Skill `spec-check`: review a screen, Stitch export, UI text or diff against the V1 spec and DECISIONS.md.
+- Agent `test-writer`: writes pytest tests for engine rules and (later) Flask endpoints.
+- Hook (PostToolUse on Write/Edit): `.claude/hooks/check_python.py` compile-checks Python and re-runs the tests; fix any failure it reports before moving on.
+- Stitch MCP server is connected for design work (screens, design system).
 
 ## Non-negotiable rules
 1. Financial calculations are deterministic Python/JS. NEVER use an LLM to compute or invent amounts.
@@ -46,6 +54,8 @@ design/                      Stitch export review and design notes
 - **Test first:** for engine changes, add/extend a case in `tests/vectors.json` or `tests/test_engine.py` first, watch it fail, then implement.
 - Use `/plan` before any change spanning more than one module.
 
-## Status
+## Status (updated 22 Nov 2026)
 - Phase 1 research: done. Phase 2 Stitch design: 4 of 10 screens exported, review in `design/stitch-review.md`.
-- Phase 4 engine: implemented with tests (T01–T06, T08, T09 at engine level). Phases 3, 5–8: not started.
+- Phase 4 engine: implemented with tests (T01–T06, T08, T09 at engine level), plus stage-2 hardening: month edge cases, status order, alternative C boundaries, validation edges, `total_contributed()` (S = initial amount + contributions). 76 tests passing.
+- Phases 3, 5–8 (frontend, Flask backend, ...): not started. D8 (where calculations run) still needs a team decision.
+- 5-minute project pitch deck (English, for Ofek): https://claude.ai/artifact/HzYt1GjXKF5KT3Zq4G8JjS

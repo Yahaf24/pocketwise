@@ -18,9 +18,13 @@ from pocketwise_engine import (
     parse_amount,
     parse_expense,
     parse_goal,
+    add_months,
+    monthly_summary,
+    parse_date,
     plan_needs_review,
     planning_months,
     should_show_suggestion,
+    total_contributed,
 )
 
 VECTORS = json.loads((Path(__file__).parent / "vectors.json").read_text(encoding="utf-8"))
@@ -214,3 +218,151 @@ def test_contributions_reduce_requirement():
 def test_contribution_must_be_positive():
     with pytest.raises(ValidationError):
         add_contribution([], {"id": "c-1", "amount": 0, "date": "2026-11-08"})
+
+
+# ---------- stage 2 hardening: month arithmetic ----------
+
+@pytest.mark.parametrize("start,n,expected", [
+    ("2027-01-31", 1, "2027-02-28"),
+    ("2028-01-31", 1, "2028-02-29"),   # leap year
+    ("2026-12-15", 1, "2027-01-15"),   # year rollover
+    ("2026-11-08", 0, "2026-11-08"),
+    ("2026-11-08", 14, "2028-01-08"),
+    ("2026-08-31", 3, "2026-11-30"),
+])
+def test_add_months(start, n, expected):
+    assert add_months(date.fromisoformat(start), n) == date.fromisoformat(expected)
+
+
+def test_planning_months_leap_day_deadline():
+    assert planning_months(date(2028, 1, 31), date(2028, 2, 29)) == 1
+    assert planning_months(date(2028, 1, 31), date(2028, 2, 28)) == 0
+
+
+# ---------- stage 2 hardening: summary and status order ----------
+
+def test_monthly_summary_dana():
+    income, expenses, _, _ = build(VECTORS["cases"][0])
+    s = monthly_summary(income, expenses)
+    assert s["essential"] == ag("2850")
+    assert s["flexible"] == ag("350")
+    assert s["total_expenses"] == ag("3200")
+    assert s["balance"] == ag("800")
+
+
+def custom(income, essential, flexible, target, deadline, saved="0", today=date(2026, 11, 8)):
+    expenses = []
+    if essential:
+        expenses.append(parse_expense({"name": "Rent", "amount": essential, "kind": "essential"}))
+    if flexible:
+        expenses.append(parse_expense({"name": "Fun", "amount": flexible, "kind": "flexible"}))
+    goal = parse_goal({"name": "G", "target": target, "saved": saved, "deadline": deadline}, today, creating=False)
+    return assess(parse_amount(income, "income"), expenses, goal, today)
+
+
+def test_already_achieved_wins_over_expired_deadline():
+    result = custom("1000", "400", "300", "500", "2026-11-08", saved="500")
+    assert result["status"] == "already_achieved"
+    assert result["months"] == 0
+    assert result["required_monthly"] == 0
+
+
+def test_saved_above_target_is_already_achieved():
+    result = custom("1000", "400", "300", "500", "2027-05-08", saved="900")
+    assert result["status"] == "already_achieved"
+    assert result["remaining"] == 0
+
+
+def test_expired_deadline_needs_updated_info():
+    result = custom("1000", "400", "300", "500", "2026-11-08")
+    assert result["status"] == "needs_updated_info"
+    assert result["required_monthly"] is None
+    assert result["alt_a"] is None and result["alt_b"] is None and result["alt_c"] is None
+
+
+# ---------- stage 2 hardening: alternative C boundaries ----------
+
+def test_alt_c_available_when_flexible_exactly_covers_reduction():
+    # balance 300, goal 600 in 1 month -> need 300 more; flexible is exactly 300
+    result = custom("1000", "400", "300", "600", "2026-12-08")
+    assert result["status"] == "not_feasible"
+    assert result["alt_c"]["available"] is True
+    assert result["alt_c"]["reduction_needed"] == ag("300")
+
+
+def test_alt_c_unavailable_one_agora_over_flexible():
+    # same, but goal is 601 -> need 301 and only 300 is flexible
+    result = custom("1000", "400", "300", "600.01", "2026-12-08")
+    assert result["status"] == "not_feasible"
+    assert result["alt_c"]["available"] is False
+    assert result["alt_c"]["reason"] == "not_enough_flexible_spending"
+
+
+def test_negative_balance_blocks_a_and_b_but_not_c_when_flexible_is_large():
+    # income 1000, expenses 1200 -> balance -200; reduction needed = 600 + 200 = 800 = flexible
+    result = custom("1000", "400", "800", "600", "2026-12-08")
+    assert result["balance"] == ag("-200")
+    assert result["status"] == "not_feasible"
+    assert result["alt_a"] == {"available": False, "reason": "no_monthly_surplus"}
+    assert result["alt_b"] == {"available": False, "reason": "no_monthly_surplus"}
+    assert result["alt_c"]["available"] is True
+
+
+def test_alternatives_absent_when_feasible():
+    result = custom("2000", "400", "300", "600", "2026-12-08")
+    assert result["status"] == "feasible"
+    assert result["alt_a"] is None and result["alt_b"] is None and result["alt_c"] is None
+
+
+# ---------- stage 2 hardening: validation edges ----------
+
+def test_amount_cap_boundary():
+    assert parse_amount("10000000", "amount") == 10_000_000 * 100
+    with pytest.raises(ValidationError):
+        parse_amount("10000000.01", "amount")
+
+
+def test_name_length_boundary_and_hebrew():
+    ok = parse_expense({"name": "ת" * 60, "amount": "10", "kind": "flexible"})
+    assert len(ok.name) == 60
+    with pytest.raises(ValidationError):
+        parse_expense({"name": "ת" * 61, "amount": "10", "kind": "flexible"})
+    assert parse_expense({"name": "שכר דירה", "amount": "₪1,800", "kind": "essential"}).amount == ag("1800")
+
+
+def test_parse_goal_existing_goal_may_have_past_deadline():
+    goal = parse_goal({"name": "X", "target": "100", "saved": "0", "deadline": "2026-01-01"},
+                      date(2026, 11, 8), creating=False)
+    assert goal.deadline == date(2026, 1, 1)
+
+
+def test_parse_date_accepts_date_and_rejects_garbage():
+    assert parse_date(date(2027, 5, 8), "deadline") == date(2027, 5, 8)
+    with pytest.raises(ValidationError):
+        parse_date("2027-02-30", "deadline")
+
+
+def test_goal_with_saved_keeps_other_fields():
+    _, _, goal, _ = build(VECTORS["cases"][0])
+    updated = goal.with_saved(ag("500"))
+    assert updated.saved == ag("500")
+    assert (updated.name, updated.target, updated.deadline) == (goal.name, goal.target, goal.deadline)
+    assert goal.saved != updated.saved, "original goal must not change"
+
+
+# ---------- stage 2: summing contributions (S = initial amount + contributions) ----------
+
+def test_total_contributed():
+    assert total_contributed([]) == 0
+    contribs = add_contribution([], {"id": "a", "amount": ag("200"), "date": "2026-11-08"})
+    contribs = add_contribution(contribs, {"id": "b", "amount": ag("50.50"), "date": "2026-11-09"})
+    contribs = add_contribution(contribs, {"id": "a", "amount": ag("200"), "date": "2026-11-08"})  # duplicate
+    assert total_contributed(contribs) == ag("250.50")
+
+
+def test_saved_is_initial_plus_contributions():
+    income, expenses, goal, today = build(VECTORS["cases"][0])
+    contribs = add_contribution([], {"id": "a", "amount": ag("1200"), "date": "2026-11-08"})
+    result = assess(income, expenses, goal.with_saved(goal.saved + total_contributed(contribs)), today)
+    assert result["saved"] == goal.saved + ag("1200")
+    assert result["status"] == "feasible"

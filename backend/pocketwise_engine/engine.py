@@ -124,3 +124,8 @@ def add_contribution(contributions: list[dict], contribution: dict) -> list[dict
     if any(c["id"] == contribution["id"] for c in contributions):
         return list(contributions)
     return [*contributions, dict(contribution)]
+
+
+def total_contributed(contributions: list[dict]) -> int:
+    """Sum of recorded contributions in agorot. Goal.saved = initial amount + this total."""
+    return sum(c["amount"] for c in contributions)
