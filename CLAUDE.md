@@ -23,6 +23,8 @@ python -m pytest -q          # run all tests (must pass before any commit)
 backend/pocketwise_engine/   calculation engine: engine.py (assess, alternatives, contributions),
                              months.py (planning_months, add_months), validation.py (parse_amount → agorot, parse_goal, ...),
                              display.py (format_money: ₪/$ symbol, display only)
+frontend/js/money-rain.js    decorative "money rain" when the goal becomes Already Achieved (shouldCelebrate, moneyRain)
+frontend/demo/               standalone demo pages (serve with: python -m http.server 8000 --directory frontend)
 tests/                       pytest tests; tests/vectors.json = shared test cases (also for future JS mirror)
 docs/DECISIONS.md            calculation rules + open decisions
 design/                      Stitch export review and design notes
